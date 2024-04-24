@@ -35,7 +35,45 @@ async function cleanup() {
     console.log("Cleaning up... Done!")
 }
 
+const trap = ['exit', 'SIGINT', 'SIGTERM']
+function exitHandler(signal="unknown") {
+    process.stdin.resume()
+
+    console.log(`Exiting due to "${signal}"`)
+
+    trap.forEach(sig=>{
+        process.removeListener(sig, exitHandler)
+    })
+    cleanup().then(()=>process.exit())
+}
+
+trap.forEach(sig=>{
+    process.once(sig, exitHandler)
+})
+process.on('uncaughtException', async function (err) {
+    console.error(err.stack)
+    exitHandler()
+})
+
 async function startQbt(port) {
+    let containers = await docker.listContainers()
+    for (let i=0; i<containers.length; i++) {
+        for (let j=0; j<containers[i].Names.length; j++) {
+            let name = containers[i].Names[j]
+            let match = /^\/qbt-([a-z0-9]+)/.exec(name)
+            if (match) {
+                let ct = docker.getContainer(match[1])
+                try {
+                    await ct.inspect()
+                } catch (e) {
+                    if (e.reason === 'no such container') {
+                        console.log(`Warning: Deleting orphan qbt container: qbt-${match[1]}`)
+                        await docker.getContainer('qbt-' + match[1]).remove({force:true})
+                    }
+                }
+            }
+        }
+    }
     process.stdout.write('Pulling qbittorent docker image')
     await docker.pull('linuxserver/qbittorrent:latest', function(err, stream) {
         //...
@@ -44,6 +82,11 @@ async function startQbt(port) {
         async function onFinished(err, output) {
             console.log(' Done!')
             console.log("Starting qbt...")
+            try {
+                await docker.getContainer(`qbt-${os.hostname()}`).remove({force:true})
+            } catch (e) {
+                // Fail silently
+            }
             qbt = await docker.createContainer( {
                 Image: 'linuxserver/qbittorrent:latest',
                 AttachStdout: true,
@@ -200,24 +243,3 @@ if (!process.env.PIA_DIP || process.env.PIA_DIP === '') {
     if (DIP.status !== 'active') throw new Error(`Got bad response: ${JSON.stringify(DIP)}`)
     await connect(DIP.ip, DIP.cn, DIP)
 }
-
-const trap = ['exit', 'SIGINT', 'SIGTERM']
-function exitHandler(signal="unknown") {
-    process.stdin.resume()
-
-    console.log(`Exiting due to "${signal}"`)
-
-    trap.forEach(sig=>{
-        process.removeListener(sig, exitHandler)
-    })
-    cleanup().then(()=>process.exit())
-}
-
-trap.forEach(sig=>{
-    process.once(sig, exitHandler)
-})
-process.on('uncaughtException', async function (err) {
-    console.error(err.stack)
-    exitHandler()
-    process.exit(1)
-})

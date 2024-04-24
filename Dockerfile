@@ -115,7 +115,7 @@ RUN yarn
 
 COPY . /app/
 
-ENV PIA_USER="" PIA_PASSWORD="" PIA_TOKEN=""
+ENV PIA_USERNAME="" PIA_PASSWORD="" PIA_TOKEN="" PIA_DIP=""
 
 EXPOSE 8080
 RUN echo 'node /app/src/pia.js' >> /root/.bash_history
