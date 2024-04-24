@@ -79,7 +79,7 @@ async function startQbt(port) {
         //...
         docker.modem.followProgress(stream, onFinished, onProgress);
 
-        async function onFinished(err, output) {
+        async function onFinished() {
             console.log(' Done!')
             console.log("Starting qbt...")
             try {
@@ -108,7 +108,7 @@ async function startQbt(port) {
             })
             console.log("Starting qbt... DONE!")
         }
-        function onProgress(event) {
+        function onProgress() {
             process.stdout.write(".");
         }
     })
