@@ -30,7 +30,7 @@ async function cleanup() {
     console.log("Cleaning up...")
     if (qbt) {
         console.log("Removing qbt container...")
-        await qbt.remove({force:true})
+        try { await qbt.remove({force:true}) } catch (e) { console.log('Removing qbt failed: ' + e.reason) }
     }
     console.log("Cleaning up... Done!")
 }
@@ -50,7 +50,7 @@ function exitHandler(signal="unknown") {
 trap.forEach(sig=>{
     process.once(sig, exitHandler)
 })
-process.on('uncaughtException', async function (err) {
+process.once('uncaughtException', async function (err) {
     console.error(err.stack)
     exitHandler()
 })
