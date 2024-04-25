@@ -96,6 +96,7 @@ async function startQbt(port) {
                     AutoRemove: true,
                     Binds: [
                         `${process.env.DATA_DIR}:/data`,
+                        `${process.env.DATA_DIR}/.config:/config`,
                     ]
                 },
                 name: `qbt-${os.hostname()}`,
@@ -103,11 +104,9 @@ async function startQbt(port) {
                     "PUID=10000",
                     "PGID=10000",
                     'UMASK=002',
-                    'QBT_LEGAL_NOTICE=confirm',
-                    `TORRENTING_PORT=${port}`,
-                    "BT_CONFIG_PATH=/data/.config",
-                    "QBT_DOWNLOADS_PATH=/data"
-                ]
+                    'QBT_LEGAL_NOTICE=confirm'
+                ],
+                Cmd: [`--torrenting-port=${port}`]
             })
             await qbt.start()
             qbt.attach({stream: true, stdout: true, stderr: true}, function (err, stream) {
