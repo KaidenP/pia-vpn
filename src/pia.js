@@ -75,7 +75,7 @@ async function startQbt(port) {
         }
     }
     process.stdout.write('Pulling qbittorent docker image')
-    await docker.pull('linuxserver/qbittorrent:latest', function(err, stream) {
+    await docker.pull('qbittorrentofficial/qbittorrent-nox:latest', function(err, stream) {
         //...
         docker.modem.followProgress(stream, onFinished, onProgress);
 
@@ -88,19 +88,26 @@ async function startQbt(port) {
                 // Fail silently
             }
             qbt = await docker.createContainer( {
-                Image: 'linuxserver/qbittorrent:latest',
+                Image: 'qbittorrentofficial/qbittorrent-nox:latest',
                 AttachStdout: true,
                 AttachStderr: true,
                 HostConfig: {
                     NetworkMode: `container:${os.hostname()}`,
                     AutoRemove: true,
                     Binds: [
-                        `${process.env.DATA_DIR}:/downloads`,
-                        `${process.env.DATA_DIR}/.config:/config`
+                        `${process.env.DATA_DIR}:/data`,
                     ]
                 },
                 name: `qbt-${os.hostname()}`,
-                Env: ["PUID=10000", "PGID=10000", "TZ=America/Toronto", `TORRENTING_PORT=${port}`]
+                Env: [
+                    "PUID=10000",
+                    "PGID=10000",
+                    'UMASK=002',
+                    'QBT_LEGAL_NOTICE=confirm',
+                    `TORRENTING_PORT=${port}`,
+                    "BT_CONFIG_PATH=/data/.config",
+                    "QBT_DOWNLOADS_PATH=/data"
+                ]
             })
             await qbt.start()
             qbt.attach({stream: true, stdout: true, stderr: true}, function (err, stream) {
