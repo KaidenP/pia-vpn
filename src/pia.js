@@ -176,7 +176,7 @@ async function connect(ip, hostname, DIP=false) {
 
     console.log('Setting up Firewall...')
     await exec('wg-quick down pia || true')
-    await exec('ip6tables -P INPUT DROP && ip6tables -P OUTPUT DROP && ip6tables -P FORWARD DROP')
+    await exec('ip6tables -P INPUT DROP && ip6tables -P OUTPUT DROP && ip6tables -P FORWARD DROP || echo "Setting ip6tables failed"')
     await exec('iptables -P INPUT DROP && iptables -P OUTPUT DROP && iptables -P FORWARD DROP')
     await exec('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
     await exec('iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
