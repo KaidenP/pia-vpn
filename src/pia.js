@@ -121,29 +121,6 @@ async function startQbt(port) {
     })
 }
 
-async function portForward(ip, hostname, payload, signature) {
-    let pf_json = await got.get(`https://${ip}:19999/bindPort?${(new URLSearchParams({
-        signature: signature,
-        payload: payload
-    })).toString()}`, {
-        headers: {
-            Host: hostname
-        },
-        https: {
-            certificateAuthority: await fs.readFile('ca.rsa.4096.crt')
-        }
-    }).json()
-
-    if (pf_json.status !== 'OK') throw new Error('Port Refresh Failed')
-
-    console.log("Doing a ping test")
-    try {
-        await exec('ping -c 5 8.8.8.8')
-    } catch (e) {
-        throw new Error('Ping test failed')
-    }
-    console.log("Done!")
-}
 async function connect(ip, hostname, DIP=false) {
     console.log('Generating Keys...')
     const privkey = (await exec(`wg genkey`)).stdout
@@ -229,8 +206,32 @@ Endpoint = ${ip}:${pia_json.server_port}
     await exec(`iptables -A INPUT -p udp -i pia --dport ${payload.port} -j ACCEPT`)
     await exec(`iptables -A INPUT -p tcp -i pia --dport ${payload.port} -j ACCEPT`)
 
-    setInterval(portForward.bind(undefined, [ip, hostname, pf_json.payload, pf_json.signature]), 15*60*1000)
-    await portForward(ip, hostname, pf_json.payload, pf_json.signature)
+    async function portForward() {
+        let pf_res = await got.get(`https://${ip}:19999/bindPort?${(new URLSearchParams({
+            signature: pf_json.signature,
+            payload: pf_json.payload
+        })).toString()}`, {
+            headers: {
+                Host: hostname
+            },
+            https: {
+                certificateAuthority: await fs.readFile('ca.rsa.4096.crt')
+            }
+        }).json()
+
+        if (pf_res.status !== 'OK') throw new Error('Port Refresh Failed')
+
+        console.log("Doing a ping test")
+        try {
+            await exec('ping -c 5 8.8.8.8')
+        } catch (e) {
+            throw new Error('Ping test failed')
+        }
+        console.log("Done!")
+    }
+
+    setInterval(portForward, 15*60*1000)
+    await portForward()
     await startQbt(payload.port)
 }
 
