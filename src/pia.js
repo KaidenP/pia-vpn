@@ -8,6 +8,10 @@ import got from 'got'
 import FormData from "form-data"
 import Docker from "dockerode"
 import os from 'os'
+const oldlog = console.log.bind(console)
+console.log = function (...args) {
+    oldlog('[' + (new Date()).toLocaleTimeString() + ']: ', ...args)
+}
 
 const docker = new Docker({socketPath: '/var/run/docker.sock'})
 let qbt
