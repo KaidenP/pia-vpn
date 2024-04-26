@@ -39,6 +39,7 @@ const trap = ['exit', 'SIGINT', 'SIGTERM']
 function exitHandler(signal="unknown") {
     process.stdin.resume()
 
+    process.stdout.write((new Date()).toString() + ': ')
     console.log(`Exiting due to "${signal}"`)
 
     trap.forEach(sig=>{
