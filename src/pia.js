@@ -101,7 +101,7 @@ async function startQbt(port) {
                     'homepage.name': 'qBittorrent',
                     'homepage.href': 'https://home.kaidenprince.com/app/qBittorrent',
                     'homepage.widget.type': 'qbittorrent',
-                    'homepage.widget.url': `http://qbt-${os.hostname()}:8080`
+                    'homepage.widget.url': `https://home.kaidenprince.com/app/qBittorrent`
                 },
                 HostConfig: {
                     NetworkMode: `container:${os.hostname()}`,
