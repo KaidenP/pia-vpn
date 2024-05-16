@@ -96,6 +96,13 @@ async function startQbt(port) {
                 Image: 'qbittorrentofficial/qbittorrent-nox:latest',
                 AttachStdout: true,
                 AttachStderr: true,
+                Labels: {
+                    'homepage.group': 'Media',
+                    'homepage.name': 'qBittorrent',
+                    'homepage.href': 'https://home.kaidenprince.com/app/qBittorent',
+                    'homepage.widget.type': 'qbittorent',
+                    'homepage.widget.url': `http://qbt-${os.hostname()}:8080`
+                },
                 HostConfig: {
                     NetworkMode: `container:${os.hostname()}`,
                     AutoRemove: true,
